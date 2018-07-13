@@ -8,3 +8,4 @@ error.log
 v2er.db
 Script/log.text
 Script/config.py
+Script/__pycache__/
