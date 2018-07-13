@@ -6,11 +6,11 @@ struct User: SQLiteModel {
 
     var id: Int?
     
-    var userID: Int
+//    var userID: Int
     
     var name: String
     
-    var lastMsgTime: Int?
+    var lastMsgTime: Int? = 0
     
     var feedURL: String
 }
