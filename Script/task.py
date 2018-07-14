@@ -5,10 +5,13 @@ import jpush
 from jpush import common
 from threading import Timer
 import config
+import io
+import sys
 
 _jpush = jpush.JPush(config.app_key, config.master_secret)
-# _jpush.set_logging("DEBUG")
+#_jpush.set_logging("DEBUG")
 
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
 def pushForAlias(id, msg):
     push = _jpush.create_push()
@@ -45,12 +48,11 @@ def connectDB():
     values = cursor.fetchall()
 
     for value in values:
-        id = value[0]
         name = value[1]
         lastMsgTime = value[2]
         feedURL = value[3]
 
-        print("--------", name, "(", id,")", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
+        print("--------", name, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
         print("Feed URL = ", feedURL)
 
         d = feedparser.parse(feedURL)
@@ -64,12 +66,12 @@ def connectDB():
         print("最新消息时间戳: ", published)
         print("本地最后一条消息时间戳: ", lastMsgTime)
         print("标题: ", title)
-        print("--------", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
 
         if lastMsgTime is not None and published > lastMsgTime:
-            pushForAlias(id, title)
+            pushForAlias(name, title)
         
-        cursor.execute("update user set lastMsgTime = ? where id = ?", (published, id))
+        cursor.execute("update user set lastMsgTime = ? where name = ?", (published, name))
+        print("--------", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
 
     cursor.close()
 
