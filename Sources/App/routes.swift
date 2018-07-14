@@ -13,5 +13,5 @@ public func routes(_ router: Router) throws {
     router.post("todos", use: todoController.create)
     router.delete("todos", Todo.parameter, use: todoController.delete)
 
-    try router.register(collection: PushController())
+    try router.register(collection: UserController())
 }

@@ -7,6 +7,7 @@ from threading import Timer
 import config
 import io
 import sys
+import os 
 
 _jpush = jpush.JPush(config.app_key, config.master_secret)
 #_jpush.set_logging("DEBUG")
@@ -40,7 +41,10 @@ def pushForAlias(id, msg):
 
 
 def connectDB():
-    connect = sqlite3.connect('/home/ubuntu/v2erBackend/v2er.db')
+    # 上级目录
+    currnetDir = os.path.abspath('..')
+    dbPath = currnetDir + '/v2er.db'
+    connect = sqlite3.connect(dbPath)
 
     cursor = connect.cursor()
 
@@ -56,7 +60,10 @@ def connectDB():
         print("Feed URL = ", feedURL)
 
         d = feedparser.parse(feedURL)
-       
+    
+        if len(d.entries) == 0:
+           continue
+
         # 取出第一条消息
         entrie = d.entries[0]
         title = entrie.title
