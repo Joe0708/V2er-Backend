@@ -44,12 +44,11 @@ def connectDB():
     # 上级目录
     currnetDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     dbPath = currnetDir + '/v2er.db'
-    print(dbPath)
     connect = sqlite3.connect(dbPath)
 
     cursor = connect.cursor()
 
-    cursor.execute('select * from User')
+    cursor.execute('select * from User where isOnline = 1')
     values = cursor.fetchall()
 
     for value in values:

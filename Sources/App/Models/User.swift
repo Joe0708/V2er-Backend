@@ -10,6 +10,8 @@ struct User: SQLiteModel {
     var lastMsgTime: Int? = 0
     
     var feedURL: String
+    
+    var isOnline: Bool? = true
 }
 
 /// Allows `User` to be used as a dynamic migration.
