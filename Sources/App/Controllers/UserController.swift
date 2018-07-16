@@ -5,10 +5,10 @@ final class UserController: RouteCollection {
     func boot(router: Router) throws {
         let group = router.grouped("user")
         
-        group.get("", use: index)
+//        group.get("", use: index)
         group.post("", use: create)
-        group.delete("", User.parameter, use: delete)
-        group.get("", User.parameter, use: delete)
+//        group.delete("", User.parameter, use: delete)
+        group.get("status", String.parameter , use: status)
     }
 }
 
@@ -37,8 +37,20 @@ extension UserController {
     
     func delete(_ req: Request) throws -> Future<HTTPStatus> {
         return try req.parameters.next(User.self)
-            .flatMap { $0.delete(on: req) }
+            .flatMap {
+                $0.delete(on: req)
+            }
             .transform(to: .ok)
+    }
+    
+    func status(_ req: Request) throws -> Future<Response> {
+        let username = try req.parameters.next(String.self)
+        return User.query(on: req).filter(\.name, .equal, username)
+            .first()
+            .flatMap { user in
+                let status = user == nil ? UserRegisterStatus(status: false, msg: "") : UserRegisterStatus(status: true, msg: "Ok.")
+                return try JSONResponse<UserRegisterStatus>(data: status).encode(for: req)
+        }
     }
 }
 

@@ -14,7 +14,7 @@ _jpush = jpush.JPush(config.app_key, config.master_secret)
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-def pushForAlias(id, msg):
+def pushForAlias(id, msg, link):
     push = _jpush.create_push()
     alias=[id]
     alias1={"alias": alias}
@@ -22,7 +22,7 @@ def pushForAlias(id, msg):
         alias1
     )
 
-    ios = jpush.ios(alert=msg, sound="default")
+    ios = jpush.ios(alert=msg, sound="default", extras={'link': link})
     push.notification = jpush.notification(alert="Hello world with audience!", ios=ios)
     push.options = {"time_to_live":86400, "sendno":12345,"apns_production": config.is_release}
     push.platform = "ios"
@@ -71,12 +71,14 @@ def connectDB():
         content = entrie.content[0].value
         published = time.mktime(entrie.updated_parsed)
 
+        link = entrie.link
+        print(link)
         print("最新消息时间戳: ", published)
         print("本地最后一条消息时间戳: ", lastMsgTime)
         print("标题: ", title)
-
+    
         if lastMsgTime is not None and published > lastMsgTime:
-            pushForAlias(name, title)
+            pushForAlias(name, title, link)
         
         cursor.execute("update user set lastMsgTime = ? where name = ?", (published, name))
         print("--------", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
