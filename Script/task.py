@@ -42,13 +42,14 @@ def pushForAlias(id, msg):
 
 def connectDB():
     # 上级目录
-    currnetDir = os.path.abspath('..')
+    currnetDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     dbPath = currnetDir + '/v2er.db'
+    print(dbPath)
     connect = sqlite3.connect(dbPath)
 
     cursor = connect.cursor()
 
-    cursor.execute('select * from user')
+    cursor.execute('select * from User')
     values = cursor.fetchall()
 
     for value in values:
