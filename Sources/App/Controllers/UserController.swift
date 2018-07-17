@@ -5,7 +5,7 @@ final class UserController: RouteCollection {
     func boot(router: Router) throws {
         let group = router.grouped("user")
         
-        group.get("", use: index)
+//        group.get("", use: index)
         group.post("", use: create)
         //        group.delete("", User.parameter, use: delete)
         group.get("status", String.parameter , use: status)

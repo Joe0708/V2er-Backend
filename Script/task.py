@@ -59,6 +59,7 @@ class PushService(object):
 
         # proxys = cursor.execute('select * from proxy_ip').fetchall()
 
+        print("\n**************** START ****************")
         for value in values:
             name = value[1]
             lastMsgTime = value[2]
@@ -88,6 +89,7 @@ class PushService(object):
             print("标题: ", title)
 
             if lastMsgTime is not None and published > lastMsgTime:
+                print("\033[1;31;40m正在发送通知\033[0m")
                 pushForAlias(name, title, link)
             
             cursor.execute("update user set lastMsgTime = ? where name = ?", (published, name))
@@ -98,6 +100,7 @@ class PushService(object):
 
         Database.commit()
         Database.close()
+        print("**************** END ****************\n")
 
 if __name__=='__main__':
     service=PushService()
