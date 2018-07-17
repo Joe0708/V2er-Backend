@@ -7,84 +7,99 @@ from threading import Timer
 import config
 import io
 import sys
-import os 
+import os
+import urllib
+import random
 
-_jpush = jpush.JPush(config.app_key, config.master_secret)
-#_jpush.set_logging("DEBUG")
+class PushService(object):
+    def __init__(self):
+        super(PushService,self).__init__()
 
-sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+        _jpush = jpush.JPush(config.app_key, config.master_secret)
+    #_jpush.set_logging("DEBUG")
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-def pushForAlias(id, msg, link):
-    push = _jpush.create_push()
-    alias=[id]
-    alias1={"alias": alias}
-    push.audience = jpush.audience(
-        alias1
-    )
+    def pushForAlias(id, msg, link):
+        push = _jpush.create_push()
+        alias=[id]
+        alias1={"alias": alias}
+        push.audience = jpush.audience(
+            alias1
+        )
 
-    ios = jpush.ios(alert=msg, sound="default", extras={'link': link})
-    push.notification = jpush.notification(alert="Hello world with audience!", ios=ios)
-    push.options = {"time_to_live":86400, "sendno":12345,"apns_production": config.is_release}
-    push.platform = "ios"
-    print(push.payload)
-    # push.send()
-    try:
-        response=push.send()
-    except common.Unauthorized:
-        raise common.Unauthorized("Unauthorized")
-    except common.APIConnectionException:
-        raise common.APIConnectionException("conn")
-    except common.JPushFailure:
-        print("JPushFailure")
-    except:
-        print("Exception")
+        ios = jpush.ios(alert=msg, sound="default", extras={'link': link})
+        push.notification = jpush.notification(alert="", ios=ios)
+        push.options = {"time_to_live":86400, "sendno":12345,"apns_production": config.is_release}
+        push.platform = "ios"
+        print(push.payload)
+        # push.send()
+        try:
+            response=push.send()
+        except common.Unauthorized:
+            raise common.Unauthorized("Unauthorized")
+        except common.APIConnectionException:
+            raise common.APIConnectionException("conn")
+        except common.JPushFailure:
+            print("JPushFailure")
+        except:
+            print("Exception")
 
+    def connect(self):
+        # 上级目录
+        currnetDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        dbPath = currnetDir + '/v2er.db'
+        connect = sqlite3.connect(dbPath)
+        return connect  
 
-def connectDB():
-    # 上级目录
-    currnetDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    dbPath = currnetDir + '/v2er.db'
-    connect = sqlite3.connect(dbPath)
+    def main(self, Database):
+        cursor = Database.cursor()
 
-    cursor = connect.cursor()
+        cursor.execute('select * from User where isOnline = 1')
+        values = cursor.fetchall()
 
-    cursor.execute('select * from User where isOnline = 1')
-    values = cursor.fetchall()
+        # proxys = cursor.execute('select * from proxy_ip').fetchall()
 
-    for value in values:
-        name = value[1]
-        lastMsgTime = value[2]
-        feedURL = value[3]
+        for value in values:
+            name = value[1]
+            lastMsgTime = value[2]
+            feedURL = value[3]
 
-        print("--------", name, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
-        print("Feed URL = ", feedURL)
+            # proxyObj = random.choice(proxys)
+            userAgent = random.choice(config.usr_agent)
 
-        d = feedparser.parse(feedURL)
-    
-        if len(d.entries) == 0:
-           continue
+            print("--------", name, time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
+            print("Feed URL = ", feedURL)    
+            # proxy = urllib.request.ProxyHandler( {'http': 'http://{}:{}'.format(proxyObj[0], proxyObj[1])} )
+            d = feedparser.parse(feedURL, agent = userAgent)#, handlers = [proxy])
 
-        # 取出第一条消息
-        entrie = d.entries[0]
-        title = entrie.title
-        content = entrie.content[0].value
-        published = time.mktime(entrie.updated_parsed)
+            if len(d.entries) == 0:
+                continue
 
-        link = entrie.link
-        print(link)
-        print("最新消息时间戳: ", published)
-        print("本地最后一条消息时间戳: ", lastMsgTime)
-        print("标题: ", title)
-    
-        if lastMsgTime is not None and published > lastMsgTime:
-            pushForAlias(name, title, link)
-        
-        cursor.execute("update user set lastMsgTime = ? where name = ?", (published, name))
-        print("--------", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
+            # 取出第一条消息
+            entrie = d.entries[0]
+            title = entrie.title
+            content = entrie.content[0].value
+            published = time.mktime(entrie.updated_parsed)
 
-    cursor.close()
+            link = entrie.link
+            print(link)
+            print("最新消息时间戳: ", published)
+            print("本地最后一条消息时间戳: ", lastMsgTime)
+            print("标题: ", title)
 
-    connect.commit()
-    connect.close()
+            if lastMsgTime is not None and published > lastMsgTime:
+                pushForAlias(name, title, link)
+            
+            cursor.execute("update user set lastMsgTime = ? where name = ?", (published, name))
+            print("--------", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
+            print(d.headers)
 
-connectDB()
+        cursor.close()
+
+        Database.commit()
+        Database.close()
+
+if __name__=='__main__':
+    service=PushService()
+    db = service.connect()
+    service.main(db)
