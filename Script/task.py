@@ -15,12 +15,12 @@ class PushService(object):
     def __init__(self):
         super(PushService,self).__init__()
 
-        _jpush = jpush.JPush(config.app_key, config.master_secret)
+        self._jpush = jpush.JPush(config.app_key, config.master_secret)
     #_jpush.set_logging("DEBUG")
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-    def pushForAlias(id, msg, link):
-        push = _jpush.create_push()
+    def pushForAlias(self, id, msg, link):
+        push = self._jpush.create_push()
         alias=[id]
         alias1={"alias": alias}
         push.audience = jpush.audience(
@@ -90,11 +90,10 @@ class PushService(object):
 
             if lastMsgTime is not None and published > lastMsgTime:
                 print("\033[1;31;40m正在发送通知\033[0m")
-                pushForAlias(name, title, link)
+                self.pushForAlias(name, title, link)
             
             cursor.execute("update user set lastMsgTime = ? where name = ?", (published, name))
             print("--------", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
-            print(d.headers)
 
         cursor.close()
 
