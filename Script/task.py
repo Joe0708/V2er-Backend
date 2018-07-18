@@ -88,7 +88,7 @@ class PushService(object):
             print(link)
             print("最新消息时间戳: ", published)
             print("本地最后一条消息时间戳: ", lastMsgTime)
-            print("消息标题: ", message)
+            print("消息: ", message, content)
 
             if lastMsgTime is not None and published > lastMsgTime:
                 print("\033[1;31;40m正在发送通知\033[0m")
