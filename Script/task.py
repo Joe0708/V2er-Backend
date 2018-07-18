@@ -19,7 +19,7 @@ class PushService(object):
     #_jpush.set_logging("DEBUG")
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
-    def pushForAlias(self, id, msg, link):
+    def pushForAlias(self, id, title, subtitle, body, link):
         push = self._jpush.create_push()
         alias=[id]
         alias1={"alias": alias}
@@ -27,8 +27,8 @@ class PushService(object):
             alias1
         )
 
-        ios = jpush.ios(alert=msg, sound="default", extras={'link': link})
-        push.notification = jpush.notification(alert="", ios=ios)
+        ios = jpush.ios(alert={"title": title, "subtitle": subtitle, "body": body}, sound="default", extras={'link': link})
+        push.notification = jpush.notification(alert=subtitle, ios=ios)
         push.options = {"time_to_live":86400, "sendno":12345,"apns_production": config.is_release}
         push.platform = "ios"
         print(push.payload)
@@ -58,7 +58,8 @@ class PushService(object):
         values = cursor.fetchall()
 
         # proxys = cursor.execute('select * from proxy_ip').fetchall()
-
+        # self.pushForAlias("devjoe", "111", "111")
+        # return
         print("\n**************** START ****************")
         for value in values:
             name = value[1]
@@ -78,19 +79,20 @@ class PushService(object):
 
             # 取出第一条消息
             entrie = d.entries[0]
-            title = entrie.title
-            content = entrie.content[0].value
+            message = entrie.title
+            content = entrie.content[0].value.strip()
             published = time.mktime(entrie.updated_parsed)
 
             link = entrie.link
+
             print(link)
             print("最新消息时间戳: ", published)
             print("本地最后一条消息时间戳: ", lastMsgTime)
-            print("标题: ", title)
+            print("消息标题: ", message)
 
             if lastMsgTime is not None and published > lastMsgTime:
                 print("\033[1;31;40m正在发送通知\033[0m")
-                self.pushForAlias(name, title, link)
+                self.pushForAlias(name, entrie.author, message, content, link)
             
             cursor.execute("update user set lastMsgTime = ? where name = ?", (published, name))
             print("--------", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
