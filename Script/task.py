@@ -10,6 +10,7 @@ import sys
 import os
 import urllib
 import random
+from bs4 import BeautifulSoup
 
 class PushService(object):
     def __init__(self):
@@ -88,6 +89,11 @@ class PushService(object):
             print(link)
             print("最新消息时间戳: ", published)
             print("本地最后一条消息时间戳: ", lastMsgTime)
+
+            html = BeautifulSoup(content).html
+            if html is not None:
+                content = html.get_text()
+
             print("消息: ", message, content)
 
             if lastMsgTime is not None and published > lastMsgTime:
