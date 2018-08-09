@@ -21,6 +21,9 @@ class PushService(object):
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 
     def pushForAlias(self, id, title, subtitle, body, link):
+        if len(title) == 0 and len(subtitle) == 0 and len(body) == 0:
+            return
+
         push = self._jpush.create_push()
         alias=[id]
         alias1={"alias": alias}
