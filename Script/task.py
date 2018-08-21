@@ -52,7 +52,7 @@ class PushService(object):
         # 上级目录
         currnetDir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         dbPath = currnetDir + '/v2er.db'
-        connect = sqlite3.connect(dbPath)
+        connect = sqlite3.connect(dbPath, timeout=5)
         return connect  
 
     def main(self, Database):
@@ -93,7 +93,7 @@ class PushService(object):
             print("最新消息时间戳: ", published)
             print("本地最后一条消息时间戳: ", lastMsgTime)
 
-            html = BeautifulSoup(content).html
+            html = BeautifulSoup(content, "lxml").html
             if html is not None:
                 content = html.get_text()
 
@@ -102,9 +102,10 @@ class PushService(object):
             if lastMsgTime is not None and published > lastMsgTime:
                 print("\033[1;31;40m正在发送通知\033[0m")
                 self.pushForAlias(name, entrie.author, message, content, link)
-            
-            cursor.execute("update user set lastMsgTime = ? where name = ?", (published, name))
-            print("--------", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
+       
+            if published != lastMsgTime:	
+                cursor.execute("update user set lastMsgTime = ? where name = ?", (published, name))
+                print("--------", time.strftime("%Y-%m-%d %H:%M:%S", time.localtime()), "--------")
 
         cursor.close()
 
